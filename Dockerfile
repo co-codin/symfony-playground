@@ -1,25 +1,21 @@
-FROM php:7.4-fpm
+FROM php:8.3-cli-alpine as sio_test
+RUN apk add --no-cache git zip bash
 
-# Install dependencies
-RUN apt-get update && apt-get install -y libzip-dev zip
+# Setup php extensions
+RUN apk add --no-cache postgresql-dev \
+    && docker-php-ext-install pdo_pgsql pdo_mysql
 
-# Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+ENV COMPOSER_CACHE_DIR=/tmp/composer-cache
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set working directory to /app
+# Setup php app user
+ARG USER_ID=1000
+RUN adduser -u ${USER_ID} -D -H app
+USER app
+
+COPY --chown=app . /app
 WORKDIR /app
 
-# Copy composer.lock and composer.json
-COPY composer.lock composer.json /app/
-
-# Install dependencies
-RUN composer install --no-dev --prefer-dist
-
-# Copy application code
-COPY . /app/
-
-# Expose port 8337
 EXPOSE 8337
 
-# Run command to start the development server
-CMD ["php", "bin/console", "server:run", "0.0.0.0:8337"]
+CMD ["php", "-S", "0.0.0.0:8337", "-t", "public"]
