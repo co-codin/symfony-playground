@@ -5,3 +5,13 @@ controllers:
 kernel:
     resource: ../src/Kernel.php
     type: annotation
+
+calculate_price:
+    path: /calculate-price
+    controller: App\Controller\CalculatePriceController::calculatePrice
+    methods: POST
+
+purchase:
+    path: /purchase
+    controller: App\Controller\PurchaseController::purchase
+    methods: POST
